@@ -16,17 +16,13 @@
         <h1 class="text-xl font-bold mb-10 text-sky-400">VenuePortal</h1>
         <nav class="space-y-8">
             <div>
-                <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Menu</h3>
+                <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Navigation</h3>
                 <div class="space-y-4">
-                    <button onclick="showSection('dashboard')" class="w-full text-left font-semibold text-sky-300">Dashboard</button>
+                    <button onclick="showSection('dashboard')" class="w-full text-left font-semibold text-sky-300">Reward Dashboard</button>
+                    <button onclick="showSection('feedback')" class="w-full text-left font-medium text-slate-300 hover:text-white transition">Feedback Feed</button>
                 </div>
             </div>
-            <div>
-                <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Feedback</h3>
-                <div id="complaints-list" class="space-y-2 text-sm text-slate-300">
-                    <p class="italic text-slate-500">Loading feedback...</p>
-                </div>
-            </div>
+            <div id="status-indicator" class="text-xs text-emerald-400">● Live Monitoring Active</div>
         </nav>
     </aside>
 
@@ -37,9 +33,11 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 p-4 md:p-12 overflow-y-auto">
-        <div id="dashboard" class="max-w-3xl mx-auto">
-            <h2 class="text-3xl font-bold text-slate-900 mb-8">Manage Rewards</h2>
+    <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        
+        <!-- Reward Dashboard Section -->
+        <div id="section-dashboard" class="max-w-3xl mx-auto">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Manage Rewards</h2>
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">VIP Offer Text</label>
@@ -66,11 +64,20 @@
                 <button onclick="updateOffer()" id="save-btn" class="w-full bg-sky-600 text-white font-bold py-4 rounded-2xl hover:bg-sky-700 transition">Save Changes</button>
             </div>
         </div>
+
+        <!-- Feedback Section -->
+        <div id="section-feedback" class="max-w-4xl mx-auto hidden">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Real-Time Feedback</h2>
+            <div id="feedback-grid" class="grid gap-4">
+                <p class="text-slate-500 italic">Waiting for incoming feedback...</p>
+            </div>
+        </div>
+
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDmKvSrxPI0dWcRkQZGz35x-amxYmtP40Y",
@@ -85,8 +92,13 @@
         const db = getFirestore(app);
         const venueId = 'the-red-lion-cromer';
 
+        window.showSection = (section) => {
+            document.getElementById('section-dashboard').classList.toggle('hidden', section !== 'dashboard');
+            document.getElementById('section-feedback').classList.toggle('hidden', section !== 'feedback');
+        };
+
         async function init() {
-            // Load Venue Data
+            // Load Reward Data
             const snap = await getDoc(doc(db, "venues", venueId));
             if (snap.exists()) {
                 const data = snap.data();
@@ -97,16 +109,23 @@
                 document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
             }
 
-            // Load Complaints
-            const complaintsSnap = await getDocs(query(collection(db, "complaints"), orderBy("timestamp", "desc")));
-            const list = document.getElementById('complaints-list');
-            list.innerHTML = complaintsSnap.empty ? '<p>No feedback yet.</p>' : '';
-            complaintsSnap.forEach(doc => {
-                const c = doc.data();
-                list.innerHTML += `<div class="p-2 border-b border-slate-700">
-                    <p class="font-bold text-xs">${c.name}</p>
-                    <p class="text-xs truncate">${c.text}</p>
-                </div>`;
+            // Listen for feedback
+            const q = query(collection(db, "complaints"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snapshot) => {
+                const grid = document.getElementById('feedback-grid');
+                grid.innerHTML = snapshot.empty ? '<p class="text-slate-500 italic">No feedback received yet.</p>' : '';
+                snapshot.forEach((doc) => {
+                    const c = doc.data();
+                    const date = c.timestamp?.toDate().toLocaleString('en-GB') || 'N/A';
+                    grid.innerHTML += `
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                            <div class="flex justify-between items-start mb-3">
+                                <div><p class="font-bold text-slate-900">${c.name || 'Anonymous'}</p><p class="text-sm text-sky-600">${c.email || ''}</p></div>
+                                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">${date}</span>
+                            </div>
+                            <p class="text-slate-700 text-sm italic border-l-2 border-slate-200 pl-4">${c.text || ''}</p>
+                        </div>`;
+                });
             });
         }
 
@@ -120,7 +139,7 @@
                 voucherTerms: document.getElementById('edit-terms').value,
                 dailyVoucherLimit: parseInt(document.getElementById('edit-limit').value)
             });
-            alert("Updated.");
+            alert("Changes saved.");
             btn.innerText = "Save Changes";
         };
 
