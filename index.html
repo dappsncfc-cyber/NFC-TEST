@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Welcome to the Red Lion</title>
+    <title>Venue Concierge</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -161,7 +161,6 @@
             
             const urlParams = new URLSearchParams(window.location.search);
             const venueId = urlParams.get('venueId') || 'the-red-lion-cromer';
-            const DAILY_LIMIT = 50; 
             let currentVenueData = null;
 
             const setHidden = (el, shouldHide) => el?.classList.toggle('hidden', shouldHide);
@@ -220,10 +219,11 @@
                 setBtnLoading(submitBtn, true);
                 try {
                     const today = new Date().toISOString().split('T')[0];
+                    const dailyLimit = currentVenueData.dailyVoucherLimit || 50; 
                     const q = query(collection(db, "vouchers_issued"), where("venueId", "==", venueId), where("date", "==", today));
                     const snap = await getDocs(q);
                     
-                    if (snap.size >= DAILY_LIMIT) {
+                    if (snap.size >= dailyLimit) {
                         setHidden(els.vipForm, true);
                         setHidden(els.vipLimit, false);
                         return;
