@@ -7,11 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        @keyframes pulse-subtle { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .notify-flash { animation: pulse-subtle 1s ease-in-out infinite; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col md:flex-row">
 
-    <!-- Sidebar Navigation -->
     <aside id="sidebar" class="w-full md:w-64 sidebar-gradient text-white p-6 md:p-8 hidden md:block">
         <h1 class="text-xl font-bold mb-10 text-sky-400">VenuePortal</h1>
         <nav class="space-y-8">
@@ -19,23 +20,22 @@
                 <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Navigation</h3>
                 <div class="space-y-4">
                     <button onclick="showSection('dashboard')" class="w-full text-left font-semibold text-sky-300">Reward Dashboard</button>
-                    <button onclick="showSection('feedback')" class="w-full text-left font-medium text-slate-300 hover:text-white transition">Feedback Feed</button>
+                    <div class="relative flex items-center">
+                        <button onclick="showSection('feedback')" class="w-full text-left font-medium text-slate-300 hover:text-white transition">Feedback Feed</button>
+                        <span id="feedback-badge" class="hidden ml-2 px-2 py-0.5 bg-rose-500 text-[9px] font-black rounded-full shadow-lg shadow-rose-900/50 notify-flash">NEW</span>
+                    </div>
                 </div>
             </div>
             <div id="status-indicator" class="text-xs text-emerald-400">● Live Monitoring Active</div>
         </nav>
     </aside>
 
-    <!-- Mobile Header -->
     <header class="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center">
         <span class="font-bold">VenuePortal</span>
         <button onclick="document.getElementById('sidebar').classList.toggle('hidden')">Menu</button>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-        
-        <!-- Reward Dashboard Section -->
         <div id="section-dashboard" class="max-w-3xl mx-auto">
             <h2 class="text-2xl font-bold text-slate-900 mb-6">Manage Rewards</h2>
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
@@ -65,14 +65,12 @@
             </div>
         </div>
 
-        <!-- Feedback Section -->
         <div id="section-feedback" class="max-w-4xl mx-auto hidden">
             <h2 class="text-2xl font-bold text-slate-900 mb-6">Real-Time Feedback</h2>
             <div id="feedback-grid" class="grid gap-4">
                 <p class="text-slate-500 italic">Waiting for incoming feedback...</p>
             </div>
         </div>
-
     </main>
 
     <script type="module">
@@ -91,6 +89,10 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const venueId = 'the-red-lion-cromer';
+        
+        let previousFeedbackCount = -1;
+
+        if (Notification.permission !== "granted") Notification.requestPermission();
 
         window.showSection = (section) => {
             document.getElementById('section-dashboard').classList.toggle('hidden', section !== 'dashboard');
@@ -102,7 +104,6 @@
         };
 
         async function init() {
-            // Load Reward Data
             const snap = await getDoc(doc(db, "venues", venueId));
             if (snap.exists()) {
                 const data = snap.data();
@@ -113,39 +114,48 @@
                 document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
             }
 
-            // Listen for feedback and filter in JS memory
             const q = query(collection(db, "complaints"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snapshot) => {
                 const grid = document.getElementById('feedback-grid');
+                const badge = document.getElementById('feedback-badge');
                 grid.innerHTML = '';
-                let count = 0;
+                let currentItems = [];
                 
                 snapshot.forEach((doc) => {
                     const c = doc.data();
-                    if (c.archived) return;
-                    
-                    count++;
-                    const date = c.timestamp?.toDate().toLocaleString('en-GB') || 'N/A';
-                    const emailSubject = encodeURIComponent("Regarding your feedback for " + (c.name || "our venue"));
-                    
-                    grid.innerHTML += `
-                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                            <div class="flex justify-between items-start mb-3">
-                                <div><p class="font-bold text-slate-900">${c.name || 'Anonymous'}</p><p class="text-sm text-sky-600">${c.email || ''}</p></div>
-                                <div class="flex flex-col items-end gap-2">
-                                    <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">${date}</span>
-                                    <div class="flex gap-2">
-                                        <a href="mailto:${c.email}?subject=${emailSubject}" class="text-[10px] bg-sky-600 text-white px-3 py-1 rounded-full hover:bg-sky-700">Reply</a>
-                                        <button onclick="archiveFeedback('${doc.id}')" class="text-[10px] bg-slate-900 text-white px-3 py-1 rounded-full hover:bg-slate-700">Archive</button>
+                    if (!c.archived) currentItems.push({ id: doc.id, ...c });
+                });
+
+                // Update notification badge
+                badge.classList.toggle('hidden', currentItems.length === 0);
+
+                if (previousFeedbackCount !== -1 && currentItems.length > previousFeedbackCount) {
+                    if (Notification.permission === "granted") {
+                        new Notification("New Feedback Received", { body: "A customer has sent a new suggestion or complaint." });
+                    }
+                }
+                previousFeedbackCount = currentItems.length;
+
+                if (currentItems.length === 0) {
+                    grid.innerHTML = '<p class="text-slate-500 italic">No new feedback.</p>';
+                } else {
+                    currentItems.forEach(c => {
+                        const date = c.timestamp?.toDate().toLocaleString('en-GB') || 'N/A';
+                        grid.innerHTML += `
+                            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div><p class="font-bold text-slate-900">${c.name || 'Anonymous'}</p><p class="text-sm text-sky-600">${c.email || ''}</p></div>
+                                    <div class="flex flex-col items-end gap-2">
+                                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">${date}</span>
+                                        <div class="flex gap-2">
+                                            <a href="mailto:${c.email}?subject=Regarding your feedback" class="text-[10px] bg-sky-600 text-white px-3 py-1 rounded-full hover:bg-sky-700">Reply</a>
+                                            <button onclick="archiveFeedback('${c.id}')" class="text-[10px] bg-slate-900 text-white px-3 py-1 rounded-full hover:bg-slate-700">Archive</button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <p class="text-slate-700 text-sm italic border-l-2 border-slate-200 pl-4">${c.text || ''}</p>
-                        </div>`;
-                });
-                
-                if (count === 0) {
-                    grid.innerHTML = '<p class="text-slate-500 italic">No new feedback.</p>';
+                                <p class="text-slate-700 text-sm italic border-l-2 border-slate-200 pl-4">${c.text || ''}</p>
+                            </div>`;
+                    });
                 }
             });
         }
