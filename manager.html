@@ -113,7 +113,7 @@
                 document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
             }
 
-            // Listen for feedback and filter in JS memory to avoid index requirements
+            // Listen for feedback and filter in JS memory
             const q = query(collection(db, "complaints"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snapshot) => {
                 const grid = document.getElementById('feedback-grid');
@@ -122,17 +122,22 @@
                 
                 snapshot.forEach((doc) => {
                     const c = doc.data();
-                    if (c.archived) return; // Client-side filtering
+                    if (c.archived) return;
                     
                     count++;
                     const date = c.timestamp?.toDate().toLocaleString('en-GB') || 'N/A';
+                    const emailSubject = encodeURIComponent("Regarding your feedback for " + (c.name || "our venue"));
+                    
                     grid.innerHTML += `
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                             <div class="flex justify-between items-start mb-3">
                                 <div><p class="font-bold text-slate-900">${c.name || 'Anonymous'}</p><p class="text-sm text-sky-600">${c.email || ''}</p></div>
                                 <div class="flex flex-col items-end gap-2">
                                     <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">${date}</span>
-                                    <button onclick="archiveFeedback('${doc.id}')" class="text-[10px] bg-slate-900 text-white px-3 py-1 rounded-full hover:bg-slate-700">Archive</button>
+                                    <div class="flex gap-2">
+                                        <a href="mailto:${c.email}?subject=${emailSubject}" class="text-[10px] bg-sky-600 text-white px-3 py-1 rounded-full hover:bg-sky-700">Reply</a>
+                                        <button onclick="archiveFeedback('${doc.id}')" class="text-[10px] bg-slate-900 text-white px-3 py-1 rounded-full hover:bg-slate-700">Archive</button>
+                                    </div>
                                 </div>
                             </div>
                             <p class="text-slate-700 text-sm italic border-l-2 border-slate-200 pl-4">${c.text || ''}</p>
