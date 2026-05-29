@@ -97,6 +97,10 @@
             document.getElementById('section-feedback').classList.toggle('hidden', section !== 'feedback');
         };
 
+        window.archiveFeedback = async (id) => {
+            await updateDoc(doc(db, "complaints", id), { archived: true });
+        };
+
         async function init() {
             // Load Reward Data
             const snap = await getDoc(doc(db, "venues", venueId));
@@ -109,23 +113,35 @@
                 document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
             }
 
-            // Listen for feedback
+            // Listen for feedback and filter in JS memory to avoid index requirements
             const q = query(collection(db, "complaints"), orderBy("timestamp", "desc"));
             onSnapshot(q, (snapshot) => {
                 const grid = document.getElementById('feedback-grid');
-                grid.innerHTML = snapshot.empty ? '<p class="text-slate-500 italic">No feedback received yet.</p>' : '';
+                grid.innerHTML = '';
+                let count = 0;
+                
                 snapshot.forEach((doc) => {
                     const c = doc.data();
+                    if (c.archived) return; // Client-side filtering
+                    
+                    count++;
                     const date = c.timestamp?.toDate().toLocaleString('en-GB') || 'N/A';
                     grid.innerHTML += `
                         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                             <div class="flex justify-between items-start mb-3">
                                 <div><p class="font-bold text-slate-900">${c.name || 'Anonymous'}</p><p class="text-sm text-sky-600">${c.email || ''}</p></div>
-                                <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">${date}</span>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded">${date}</span>
+                                    <button onclick="archiveFeedback('${doc.id}')" class="text-[10px] bg-slate-900 text-white px-3 py-1 rounded-full hover:bg-slate-700">Archive</button>
+                                </div>
                             </div>
                             <p class="text-slate-700 text-sm italic border-l-2 border-slate-200 pl-4">${c.text || ''}</p>
                         </div>`;
                 });
+                
+                if (count === 0) {
+                    grid.innerHTML = '<p class="text-slate-500 italic">No new feedback.</p>';
+                }
             });
         }
 
