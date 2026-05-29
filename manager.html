@@ -9,72 +9,68 @@
         .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col">
+<body class="bg-slate-50 min-h-screen flex flex-col md:flex-row">
 
-    <div class="flex flex-1">
-        <!-- Sidebar Navigation -->
-        <aside class="w-64 sidebar-gradient text-white p-8 hidden md:block">
-            <h1 class="text-xl font-bold mb-10 text-sky-400">VenuePortal</h1>
-            <nav class="space-y-4">
-                <div class="w-full text-left font-semibold text-sky-300 cursor-default">Dashboard</div>
-                <div class="w-full text-left font-medium text-slate-500 cursor-default">Vouchers</div>
-                <div class="w-full text-left font-medium text-slate-500 cursor-default">Settings</div>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-12">
-            <div id="admin-section" class="max-w-3xl mx-auto">
-                <header class="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 class="text-3xl font-bold text-slate-900">Manage Rewards</h2>
-                        <p class="text-slate-500">Update your live offer details for the guest landing page.</p>
-                    </div>
-                </header>
-                
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">VIP Offer Text</label>
-                        <textarea id="edit-offer" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-sky-500 outline-none"></textarea>
-                    </div>
-                    
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Voucher Code</label>
-                            <input type="text" id="edit-code" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Daily Limit</label>
-                            <input type="number" id="edit-limit" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl" placeholder="None">
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Voucher Details</label>
-                        <input type="text" id="edit-details" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Terms & Conditions</label>
-                        <textarea id="edit-terms" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"></textarea>
-                    </div>
-                    
-                    <button onclick="updateOffer()" id="save-btn" class="w-full bg-sky-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-sky-200 hover:bg-sky-700 transition">Save Changes</button>
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="w-full md:w-64 sidebar-gradient text-white p-6 md:p-8 hidden md:block">
+        <h1 class="text-xl font-bold mb-10 text-sky-400">VenuePortal</h1>
+        <nav class="space-y-8">
+            <div>
+                <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Menu</h3>
+                <div class="space-y-4">
+                    <button onclick="showSection('dashboard')" class="w-full text-left font-semibold text-sky-300">Dashboard</button>
                 </div>
             </div>
-        </main>
-    </div>
+            <div>
+                <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Feedback</h3>
+                <div id="complaints-list" class="space-y-2 text-sm text-slate-300">
+                    <p class="italic text-slate-500">Loading feedback...</p>
+                </div>
+            </div>
+        </nav>
+    </aside>
 
-    <!-- Footer -->
-    <footer class="p-6 text-center text-slate-400 text-sm">
-        &copy; <span id="year"></span> <a href="https://www.offscriptlabs.co.uk" target="_blank" class="hover:text-sky-500 transition">Offscript Labs</a>
-    </footer>
+    <!-- Mobile Header -->
+    <header class="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center">
+        <span class="font-bold">VenuePortal</span>
+        <button onclick="document.getElementById('sidebar').classList.toggle('hidden')">Menu</button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 md:p-12 overflow-y-auto">
+        <div id="dashboard" class="max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-slate-900 mb-8">Manage Rewards</h2>
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">VIP Offer Text</label>
+                    <textarea id="edit-offer" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"></textarea>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Voucher Code</label>
+                        <input type="text" id="edit-code" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Daily Limit</label>
+                        <input type="number" id="edit-limit" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Voucher Details</label>
+                    <input type="text" id="edit-details" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Terms & Conditions</label>
+                    <textarea id="edit-terms" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"></textarea>
+                </div>
+                <button onclick="updateOffer()" id="save-btn" class="w-full bg-sky-600 text-white font-bold py-4 rounded-2xl hover:bg-sky-700 transition">Save Changes</button>
+            </div>
+        </div>
+    </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-
-        document.getElementById('year').innerText = new Date().getFullYear();
+        import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDmKvSrxPI0dWcRkQZGz35x-amxYmtP40Y",
@@ -90,38 +86,42 @@
         const venueId = 'the-red-lion-cromer';
 
         async function init() {
-            try {
-                const snap = await getDoc(doc(db, "venues", venueId));
-                if (snap.exists()) {
-                    const data = snap.data();
-                    document.getElementById('edit-offer').value = data.vipOfferText || "";
-                    document.getElementById('edit-code').value = data.voucherCode || "";
-                    document.getElementById('edit-details').value = data.voucherDetails || "";
-                    document.getElementById('edit-terms').value = data.voucherTerms || "";
-                    document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
-                }
-            } catch (e) { console.error("Error loading data:", e); }
+            // Load Venue Data
+            const snap = await getDoc(doc(db, "venues", venueId));
+            if (snap.exists()) {
+                const data = snap.data();
+                document.getElementById('edit-offer').value = data.vipOfferText || "";
+                document.getElementById('edit-code').value = data.voucherCode || "";
+                document.getElementById('edit-details').value = data.voucherDetails || "";
+                document.getElementById('edit-terms').value = data.voucherTerms || "";
+                document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
+            }
+
+            // Load Complaints
+            const complaintsSnap = await getDocs(query(collection(db, "complaints"), orderBy("timestamp", "desc")));
+            const list = document.getElementById('complaints-list');
+            list.innerHTML = complaintsSnap.empty ? '<p>No feedback yet.</p>' : '';
+            complaintsSnap.forEach(doc => {
+                const c = doc.data();
+                list.innerHTML += `<div class="p-2 border-b border-slate-700">
+                    <p class="font-bold text-xs">${c.name}</p>
+                    <p class="text-xs truncate">${c.text}</p>
+                </div>`;
+            });
         }
 
         window.updateOffer = async () => {
             const btn = document.getElementById('save-btn');
-            const originalText = btn.innerText;
             btn.innerText = "Saving...";
-            try {
-                const limitVal = document.getElementById('edit-limit').value;
-                await updateDoc(doc(db, "venues", venueId), {
-                    vipOfferText: document.getElementById('edit-offer').value,
-                    voucherCode: document.getElementById('edit-code').value,
-                    voucherDetails: document.getElementById('edit-details').value,
-                    voucherTerms: document.getElementById('edit-terms').value,
-                    dailyVoucherLimit: limitVal ? parseInt(limitVal) : null
-                });
-                alert("Changes saved successfully.");
-                btn.innerText = originalText;
-            } catch (e) { 
-                alert("Update failed."); 
-                btn.innerText = originalText; 
-            }
+            await updateDoc(doc(db, "venues", venueId), {
+                vipOfferText: document.getElementById('edit-offer').value,
+                voucherCode: document.getElementById('edit-code').value,
+                voucherDetails: document.getElementById('edit-details').value,
+                voucherTerms: document.getElementById('edit-terms').value,
+                dailyVoucherLimit: parseInt(document.getElementById('edit-limit').value)
+            });
+            alert("Updated.");
+            btn.innerText = "Save Changes";
         };
 
         init();
