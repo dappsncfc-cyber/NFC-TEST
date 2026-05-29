@@ -69,14 +69,14 @@
             <section class="glass-card p-6 rounded-[28px]">
                 <div id="feedback-buttons" class="space-y-3">
                     <h2 class="text-lg font-bold text-slate-900 text-center mb-2">How was your visit?</h2>
-                    <button onclick="goToGoogle()" class="w-full bg-emerald-50 text-emerald-700 font-bold py-3 rounded-xl border border-emerald-100">🌟 I had a great time!</button>
-                    <button onclick="showComplaintForm()" class="w-full bg-rose-50 text-rose-600 font-bold py-3 rounded-xl border border-rose-100">💬 Something went wrong</button>
+                    <button onclick="goToGoogle()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-xl border border-slate-200">🌟 I had a great time!</button>
+                    <button onclick="showComplaintForm()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-xl border border-slate-200">💬 I have a suggestion</button>
                 </div>
                 <form id="complaint-form" onsubmit="handleComplaintSubmit(event)" class="hidden space-y-3 fade-in">
-                    <textarea id="complaint-text" required placeholder="What happened?" class="w-full p-3 glass-input rounded-xl text-sm"></textarea>
+                    <textarea id="complaint-text" required placeholder="What's your suggestion?" class="w-full p-3 glass-input rounded-xl text-sm"></textarea>
                     <input type="text" id="complaint-name" required placeholder="Your Name" class="w-full p-3 glass-input rounded-xl text-sm">
                     <input type="email" id="complaint-email" required placeholder="Your Email" class="w-full p-3 glass-input rounded-xl text-sm">
-                    <button type="submit" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl">Message Management</button>
+                    <button type="submit" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl">Send Message</button>
                 </form>
             </section>
 
@@ -237,7 +237,7 @@
                 timestamp: serverTimestamp()
             });
             const form = document.getElementById('complaint-form');
-            if (form) form.innerHTML = '<p class="text-center font-bold py-4">Feedback Sent. Thank you.</p>';
+            if (form) form.innerHTML = '<p class="text-center font-bold py-4">Message Sent. Thank you.</p>';
         };
     </script>
 </body>
