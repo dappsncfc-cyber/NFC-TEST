@@ -64,7 +64,6 @@
                         <p id="voucher-terms" class="text-[10px] text-slate-500 mt-3 italic"></p>
                         <button id="download-voucher-btn" class="mt-4 w-full bg-amber-600 text-white font-bold py-3 rounded-xl">Download Voucher PDF</button>
                     </div>
-                    <div id="vip-limit" class="hidden text-center text-rose-600 py-4 font-bold text-sm">Daily reward limit reached. Please check back tomorrow!</div>
                 </section>
             </div>
 
@@ -119,7 +118,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
         (async function() {
             const firebaseConfig = {
@@ -150,13 +149,11 @@
                 wifiPass: document.getElementById('wifi-password-display'),
                 vipForm: document.getElementById('vip-form'),
                 vipSuccess: document.getElementById('vip-success'),
-                vipLimit: document.getElementById('vip-limit'),
                 voucherCode: document.getElementById('voucher-code-display'),
                 voucherDetails: document.getElementById('voucher-details'),
                 voucherTerms: document.getElementById('voucher-terms'),
                 feedbackBtns: document.getElementById('feedback-buttons'),
                 complaintForm: document.getElementById('complaint-form'),
-                googleBtn: document.getElementById('google-review-btn'),
                 wifiBtn: document.getElementById('show-wifi-btn'),
                 complaintBtn: document.getElementById('show-complaint-btn'),
                 downloadBtn: document.getElementById('download-voucher-btn')
@@ -172,15 +169,34 @@
             
             const generatePDF = () => {
                 const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                doc.setFontSize(20);
-                doc.text(currentVenueData.venueName || "Voucher", 20, 20);
-                doc.setFontSize(14);
-                doc.text("Your VIP Code: " + (currentVenueData.voucherCode || "N/A"), 20, 40);
-                doc.text(currentVenueData.voucherDetails || "", 20, 55);
-                doc.setFontSize(10);
-                doc.text(currentVenueData.voucherTerms || "", 20, 75);
-                doc.save("voucher.pdf");
+                const pdf = new jsPDF({ unit: 'mm', format: [100, 150] });
+                const maxWidth = 80;
+
+                pdf.setFillColor(248, 250, 252); pdf.rect(0, 0, 100, 150, 'F');
+                pdf.setFillColor(15, 23, 42); pdf.rect(0, 0, 100, 30, 'F');
+                
+                pdf.setTextColor(255, 255, 255);
+                pdf.setFontSize(16);
+                pdf.text(currentVenueData.venueName || "VIP Voucher", 50, 18, { align: 'center' });
+                
+                pdf.setTextColor(15, 23, 42);
+                pdf.setFontSize(10);
+                pdf.text("YOUR EXCLUSIVE CODE:", 50, 50, { align: 'center' });
+                pdf.setFontSize(24);
+                pdf.text(currentVenueData.voucherCode || "XXXX", 50, 62, { align: 'center' });
+                
+                let currentY = 80;
+                pdf.setFontSize(11);
+                const splitDetails = pdf.splitTextToSize(currentVenueData.voucherDetails || "", maxWidth);
+                pdf.text(splitDetails, 50, currentY, { align: 'center' });
+                currentY += (splitDetails.length * 6) + 10;
+                
+                pdf.setFontSize(7);
+                pdf.setTextColor(100, 116, 139);
+                const splitTerms = pdf.splitTextToSize(currentVenueData.voucherTerms || "", maxWidth);
+                pdf.text(splitTerms, 50, currentY, { align: 'center' });
+                
+                pdf.save("my-vip-voucher.pdf");
             };
 
             async function loadVenueData() {
@@ -196,6 +212,8 @@
                     if (els.roomLink) els.roomLink.href = currentVenueData.roomsLink || "#";
                     if (els.menuLink) els.menuLink.href = currentVenueData.menusLink || "#";
                     if (els.instaLink) els.instaLink.href = currentVenueData.instagramLink || "#";
+                    if (els.wifiNet) els.wifiNet.innerText = currentVenueData.wifiName || "N/A";
+                    if (els.wifiPass) els.wifiPass.innerText = currentVenueData.wifiPassword || "N/A";
                     
                     const hasLogo = !!currentVenueData.logoUrl?.trim();
                     setHidden(els.logoImg, !hasLogo);
