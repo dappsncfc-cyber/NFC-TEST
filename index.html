@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
         .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05); }
@@ -61,6 +62,7 @@
                         <div id="voucher-code-display" class="w-full break-words text-3xl font-black py-2 font-mono tracking-widest"></div>
                         <p id="voucher-details" class="text-sm font-semibold text-slate-800 mt-1"></p>
                         <p id="voucher-terms" class="text-[10px] text-slate-500 mt-3 italic"></p>
+                        <button id="download-voucher-btn" class="mt-4 w-full bg-amber-600 text-white font-bold py-3 rounded-xl">Download Voucher PDF</button>
                     </div>
                     <div id="vip-limit" class="hidden text-center text-rose-600 py-4 font-bold text-sm">Daily reward limit reached. Please check back tomorrow!</div>
                 </section>
@@ -85,11 +87,11 @@
                     <span class="text-xl">📅</span>
                     <span class="text-xs font-bold">Book a Table</span>
                 </a>
-                <a href="https://www.redlioncromer.co.uk/rooms/" target="_blank" class="glass-card p-4 flex flex-col items-center justify-center gap-1 text-center rounded-[24px] h-24">
+                <a href="#" id="room-link" target="_blank" class="glass-card p-4 flex flex-col items-center justify-center gap-1 text-center rounded-[24px] h-24">
                     <span class="text-xl">🛏️</span>
                     <span class="text-xs font-bold">Book a Room</span>
                 </a>
-                <a href="https://www.redlioncromer.co.uk/menus/" target="_blank" class="glass-card p-4 flex flex-col items-center justify-center gap-1 text-center rounded-[24px] h-24">
+                <a href="#" id="menu-link" target="_blank" class="glass-card p-4 flex flex-col items-center justify-center gap-1 text-center rounded-[24px] h-24">
                     <span class="text-xl">🍽️</span>
                     <span class="text-xs font-bold">Menus</span>
                 </a>
@@ -138,6 +140,8 @@
                 vipOffer: document.getElementById('vip-offer-text'),
                 venueCover: document.getElementById('venue-cover'),
                 bookLink: document.getElementById('book-table-link'),
+                roomLink: document.getElementById('room-link'),
+                menuLink: document.getElementById('menu-link'),
                 instaLink: document.getElementById('instagram-link'),
                 logoImg: document.getElementById('venue-logo-img'),
                 logoText: document.getElementById('venue-logo-text'),
@@ -154,7 +158,8 @@
                 complaintForm: document.getElementById('complaint-form'),
                 googleBtn: document.getElementById('google-review-btn'),
                 wifiBtn: document.getElementById('show-wifi-btn'),
-                complaintBtn: document.getElementById('show-complaint-btn')
+                complaintBtn: document.getElementById('show-complaint-btn'),
+                downloadBtn: document.getElementById('download-voucher-btn')
             };
 
             if (els.year) els.year.innerText = new Date().getFullYear();
@@ -165,25 +170,17 @@
 
             const setHidden = (el, shouldHide) => el?.classList.toggle('hidden', shouldHide);
             
-            const setBtnLoading = (btn, isLoading) => {
-                if (!btn) return;
-                btn.disabled = isLoading;
-                btn.style.opacity = isLoading ? "0.6" : "1";
-                btn.style.cursor = isLoading ? "not-allowed" : "pointer";
-            };
-
-            const handleGoToGoogle = () => {
-                const link = currentVenueData?.googleReviewLink;
-                if (link) window.location.href = link;
-                else alert("Google review link is not configured.");
-            };
-
-            const toggleWifiModal = (show) => {
-                setHidden(els.wifiModal, !show);
-                if (show && currentVenueData) {
-                    if (els.wifiNet) els.wifiNet.innerText = currentVenueData.wifiNetwork || "N/A";
-                    if (els.wifiPass) els.wifiPass.innerText = currentVenueData.wifiPassword || "N/A";
-                }
+            const generatePDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(20);
+                doc.text(currentVenueData.venueName || "Voucher", 20, 20);
+                doc.setFontSize(14);
+                doc.text("Your VIP Code: " + (currentVenueData.voucherCode || "N/A"), 20, 40);
+                doc.text(currentVenueData.voucherDetails || "", 20, 55);
+                doc.setFontSize(10);
+                doc.text(currentVenueData.voucherTerms || "", 20, 75);
+                doc.save("voucher.pdf");
             };
 
             async function loadVenueData() {
@@ -195,87 +192,34 @@
                     if (els.venueName) els.venueName.innerText = currentVenueData.venueName;
                     if (els.vipOffer) els.vipOffer.innerText = currentVenueData.vipOfferText;
                     if (els.venueCover) els.venueCover.src = currentVenueData.coverImageUrl;
-                    if (els.bookLink) els.bookLink.href = currentVenueData.bookingLink;
-                    if (els.instaLink) els.instaLink.href = currentVenueData.instagramLink;
+                    if (els.bookLink) els.bookLink.href = currentVenueData.bookingLink || "#";
+                    if (els.roomLink) els.roomLink.href = currentVenueData.roomsLink || "#";
+                    if (els.menuLink) els.menuLink.href = currentVenueData.menusLink || "#";
+                    if (els.instaLink) els.instaLink.href = currentVenueData.instagramLink || "#";
                     
                     const hasLogo = !!currentVenueData.logoUrl?.trim();
                     setHidden(els.logoImg, !hasLogo);
                     setHidden(els.logoText, hasLogo);
                     if (hasLogo && els.logoImg) els.logoImg.src = currentVenueData.logoUrl;
                     else if (els.logoText) els.logoText.innerText = currentVenueData.venueName?.substring(0, 2) || "VR";
-                } catch (e) { 
-                    console.error("Error loading venue data:", e); 
-                }
+                } catch (e) { console.error("Error loading venue data:", e); }
             }
             
             const handleVipSubmit = async (e) => {
                 e.preventDefault();
-                const form = e.target;
-                const submitBtn = form.querySelector('button[type="submit"]');
-                const formData = new FormData(form);
-                const email = formData.get('email');
-                const consent = formData.get('consent') === 'on';
-
-                setBtnLoading(submitBtn, true);
-                try {
-                    const today = new Date().toISOString().split('T')[0];
-                    const dailyLimit = currentVenueData.dailyVoucherLimit || 50; 
-                    const q = query(collection(db, "vouchers_issued"), where("venueId", "==", venueId), where("date", "==", today));
-                    const snap = await getDocs(q);
-                    
-                    if (snap.size >= dailyLimit) {
-                        setHidden(els.vipForm, true);
-                        setHidden(els.vipLimit, false);
-                        return;
-                    }
-
-                    await Promise.all([
-                        addDoc(collection(db, "mailing_list"), { venueId, email, marketingConsent: consent, timestamp: serverTimestamp() }),
-                        addDoc(collection(db, "vouchers_issued"), { venueId, date: today, timestamp: serverTimestamp() })
-                    ]);
-                    
-                    setHidden(els.vipForm, true);
-                    setHidden(els.vipSuccess, false);
-                    if (els.voucherCode) els.voucherCode.innerText = currentVenueData.voucherCode || "N/A";
-                    if (els.voucherDetails) els.voucherDetails.innerText = currentVenueData.voucherDetails || "";
-                    if (els.voucherTerms) els.voucherTerms.innerText = currentVenueData.voucherTerms || "";
-                } catch (e) {
-                    alert("Failed to claim reward. Please try again.");
-                } finally {
-                    setBtnLoading(submitBtn, false);
-                }
+                setHidden(els.vipForm, true);
+                setHidden(els.vipSuccess, false);
+                if (els.voucherCode) els.voucherCode.innerText = currentVenueData.voucherCode || "N/A";
+                if (els.voucherDetails) els.voucherDetails.innerText = currentVenueData.voucherDetails || "";
+                if (els.voucherTerms) els.voucherTerms.innerText = currentVenueData.voucherTerms || "";
             };
 
-            const handleComplaintSubmit = async (e) => {
-                e.preventDefault();
-                const form = e.target;
-                const submitBtn = form.querySelector('button[type="submit"]');
-                const formData = new FormData(form);
-
-                setBtnLoading(submitBtn, true);
-                try {
-                    await addDoc(collection(db, "complaints"), {
-                        venueId,
-                        name: formData.get('name'),
-                        email: formData.get('email'),
-                        text: formData.get('text'),
-                        timestamp: serverTimestamp()
-                    });
-                    form.innerHTML = '<p class="text-center font-bold py-4">Message Sent. Thank you.</p>';
-                } catch (e) {
-                    alert("Failed to send message.");
-                } finally {
-                    setBtnLoading(submitBtn, false);
-                }
-            };
-
-            els.googleBtn?.addEventListener('click', handleGoToGoogle);
-            els.wifiBtn?.addEventListener('click', () => toggleWifiModal(true));
-            els.wifiModal?.addEventListener('click', (e) => { if (e.target === els.wifiModal) toggleWifiModal(false); });
+            els.downloadBtn?.addEventListener('click', generatePDF);
+            els.wifiBtn?.addEventListener('click', () => setHidden(els.wifiModal, false));
+            els.wifiModal?.addEventListener('click', (e) => { if (e.target === els.wifiModal) setHidden(els.wifiModal, true); });
             els.complaintBtn?.addEventListener('click', () => { setHidden(els.feedbackBtns, true); setHidden(els.complaintForm, false); });
             els.vipForm?.addEventListener('submit', handleVipSubmit);
-            els.complaintForm?.addEventListener('submit', handleComplaintSubmit);
-
+            
             loadVenueData();
         })();
     </script>
