@@ -13,15 +13,17 @@
 </head>
 <body class="bg-slate-50 min-h-screen flex flex-col md:flex-row">
 
+    <!-- Sidebar Navigation -->
     <aside id="sidebar" class="w-full md:w-64 sidebar-gradient text-white p-6 md:p-8 hidden md:block">
         <h1 class="text-xl font-bold mb-10 text-sky-400">VenuePortal</h1>
         <nav class="space-y-8">
             <div>
                 <h3 class="text-xs font-bold uppercase text-slate-500 mb-4 tracking-widest">Navigation</h3>
                 <div class="space-y-4">
-                    <button onclick="showSection('dashboard')" class="w-full text-left font-semibold text-sky-300">Reward Dashboard</button>
+                    <button id="nav-dashboard" onclick="showSection('dashboard')" class="w-full text-left font-semibold text-sky-300 transition duration-150">Reward Dashboard</button>
+                    <button id="nav-branding" onclick="showSection('branding')" class="w-full text-left font-medium text-slate-300 hover:text-white transition duration-150">Branding Settings</button>
                     <div class="relative flex items-center">
-                        <button onclick="showSection('feedback')" class="w-full text-left font-medium text-slate-300 hover:text-white transition">Feedback Feed</button>
+                        <button id="nav-feedback" onclick="showSection('feedback')" class="w-full text-left font-medium text-slate-300 hover:text-white transition duration-150">Feedback Feed</button>
                         <span id="feedback-badge" class="hidden ml-2 px-2 py-0.5 bg-rose-500 text-[9px] font-black rounded-full shadow-lg shadow-rose-900/50 notify-flash">NEW</span>
                     </div>
                 </div>
@@ -30,41 +32,90 @@
         </nav>
     </aside>
 
+    <!-- Mobile Header -->
     <header class="md:hidden p-4 bg-slate-900 text-white flex justify-between items-center">
         <span class="font-bold">VenuePortal</span>
         <button onclick="document.getElementById('sidebar').classList.toggle('hidden')">Menu</button>
     </header>
 
+    <!-- Main Content Area -->
     <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+        
+        <!-- Reward Configuration Section -->
         <div id="section-dashboard" class="max-w-3xl mx-auto">
             <h2 class="text-2xl font-bold text-slate-900 mb-6">Manage Rewards</h2>
             <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">VIP Offer Text</label>
-                    <textarea id="edit-offer" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"></textarea>
+                    <textarea id="edit-offer" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
                 </div>
                 <div class="grid md:grid-cols-2 gap-6">
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Voucher Code</label>
-                        <input type="text" id="edit-code" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <input type="text" id="edit-code" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Daily Limit</label>
-                        <input type="number" id="edit-limit" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                        <input type="number" id="edit-limit" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Voucher Details</label>
-                    <input type="text" id="edit-details" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                    <input type="text" id="edit-details" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Terms & Conditions</label>
-                    <textarea id="edit-terms" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl"></textarea>
+                    <textarea id="edit-terms" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500"></textarea>
                 </div>
-                <button onclick="updateOffer()" id="save-btn" class="w-full bg-sky-600 text-white font-bold py-4 rounded-2xl hover:bg-sky-700 transition">Save Changes</button>
+                <button onclick="updateOffer()" id="save-btn" class="w-full bg-sky-600 text-white font-bold py-4 rounded-2xl hover:bg-sky-700 transition duration-200">Save Changes</button>
             </div>
         </div>
 
+        <!-- Branding Settings Section -->
+        <div id="section-branding" class="max-w-3xl mx-auto hidden">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6">Manage Branding</h2>
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 space-y-6">
+                <!-- Cover Image Configuration Block -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Venue Cover Image URL</label>
+                    <input type="text" id="edit-cover" oninput="previewImage()" placeholder="e.g. https://images.unsplash.com/photo-..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Live Image Preview (App Viewport Simulation)</label>
+                    
+                    <!-- Simulated App Container to view exactly as in index.html -->
+                    <div class="w-full max-w-sm border border-slate-200/80 rounded-[32px] overflow-hidden shadow-lg bg-[#fafbfc] mt-2 mx-auto">
+                        <header class="relative h-64 flex flex-col justify-end px-6 pb-8">
+                            <div class="absolute inset-0 z-0">
+                                <img id="cover-preview" src="https://placehold.co/600x400/slate/white?text=No+Cover+Image" class="w-full h-full object-cover" alt="Cover Preview">
+                                <!-- Multi-layered dark gradient matches the live portal structure exactly -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-[#fafbfc] via-black/25 to-black/10"></div>
+                                <div class="absolute inset-0 bg-black/10"></div>
+                            </div>
+                            
+                            <div class="relative z-10 flex items-end gap-4 w-full">
+                                <!-- Brand Profile Image Box Box -->
+                                <div class="w-20 h-20 bg-white/95 backdrop-blur-md rounded-[22px] flex items-center justify-center shadow-lg border border-white p-2 overflow-hidden flex-shrink-0">
+                                    <span id="preview-logo-text" class="text-slate-900 font-extrabold text-xs tracking-wider text-center">...</span>
+                                    <img id="preview-logo-img" src="" alt="Logo" class="w-full h-full object-contain hidden">
+                                </div>
+                                <div class="pb-1">
+                                    <h1 id="preview-venue-name" class="text-2xl font-black text-white tracking-tight drop-shadow-md">Loading...</h1>
+                                </div>
+                            </div>
+                        </header>
+                        <!-- Context Layout Mockup below simulation header -->
+                        <div class="px-5 py-5 space-y-4">
+                            <div class="h-10 bg-slate-100 rounded-[20px] w-full border border-slate-200/50"></div>
+                            <div class="h-24 bg-slate-100 rounded-[20px] w-full border border-slate-200/50"></div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="updateBranding()" id="save-branding-btn" class="w-full bg-sky-600 text-white font-bold py-4 rounded-2xl hover:bg-sky-700 transition duration-200">Save Cover Image</button>
+            </div>
+        </div>
+
+        <!-- Feedback Log Section -->
         <div id="section-feedback" class="max-w-4xl mx-auto hidden">
             <h2 class="text-2xl font-bold text-slate-900 mb-6">Real-Time Feedback</h2>
             <div id="feedback-grid" class="grid gap-4">
@@ -96,22 +147,71 @@
 
         window.showSection = (section) => {
             document.getElementById('section-dashboard').classList.toggle('hidden', section !== 'dashboard');
+            document.getElementById('section-branding').classList.toggle('hidden', section !== 'branding');
             document.getElementById('section-feedback').classList.toggle('hidden', section !== 'feedback');
+
+            // Interactive state handling on Navigation links
+            const links = {
+                dashboard: document.getElementById('nav-dashboard'),
+                branding: document.getElementById('nav-branding'),
+                feedback: document.getElementById('nav-feedback')
+            };
+
+            Object.keys(links).forEach(key => {
+                if (links[key]) {
+                    if (key === section) {
+                        links[key].classList.add('text-sky-300', 'font-semibold');
+                        links[key].classList.remove('text-slate-300', 'font-medium');
+                    } else {
+                        links[key].classList.remove('text-sky-300', 'font-semibold');
+                        links[key].classList.add('text-slate-300', 'font-medium');
+                    }
+                }
+            });
         };
 
         window.archiveFeedback = async (id) => {
             await updateDoc(doc(db, "complaints", id), { archived: true });
         };
 
+        window.previewImage = () => {
+            const urlInput = document.getElementById('edit-cover').value;
+            const previewEl = document.getElementById('cover-preview');
+            previewEl.src = urlInput || "https://placehold.co/600x400/slate/white?text=No+Cover+Image";
+        };
+
         async function init() {
             const snap = await getDoc(doc(db, "venues", venueId));
             if (snap.exists()) {
                 const data = snap.data();
+                document.getElementById('edit-cover').value = data.coverImageUrl || "";
                 document.getElementById('edit-offer').value = data.vipOfferText || "";
                 document.getElementById('edit-code').value = data.voucherCode || "";
                 document.getElementById('edit-details').value = data.voucherDetails || "";
                 document.getElementById('edit-terms').value = data.voucherTerms || "";
                 document.getElementById('edit-limit').value = data.dailyVoucherLimit || "";
+                
+                // Populate dynamic simulated labels on viewport mockup
+                const pVenueName = document.getElementById('preview-venue-name');
+                const pLogoText = document.getElementById('preview-logo-text');
+                const pLogoImg = document.getElementById('preview-logo-img');
+                
+                if (pVenueName) pVenueName.innerText = data.venueName || "Venue Name";
+                
+                const hasLogo = !!data.logoUrl?.trim();
+                if (pLogoImg && pLogoText) {
+                    if (hasLogo) {
+                        pLogoImg.src = data.logoUrl;
+                        pLogoImg.classList.remove('hidden');
+                        pLogoText.classList.add('hidden');
+                    } else {
+                        pLogoText.innerText = data.venueName?.substring(0, 2).toUpperCase() || "RL";
+                        pLogoImg.classList.add('hidden');
+                        pLogoText.classList.remove('hidden');
+                    }
+                }
+                
+                window.previewImage();
             }
 
             const q = query(collection(db, "complaints"), orderBy("timestamp", "desc"));
@@ -162,16 +262,79 @@
 
         window.updateOffer = async () => {
             const btn = document.getElementById('save-btn');
-            btn.innerText = "Saving...";
-            await updateDoc(doc(db, "venues", venueId), {
-                vipOfferText: document.getElementById('edit-offer').value,
-                voucherCode: document.getElementById('edit-code').value,
-                voucherDetails: document.getElementById('edit-details').value,
-                voucherTerms: document.getElementById('edit-terms').value,
-                dailyVoucherLimit: parseInt(document.getElementById('edit-limit').value)
-            });
-            alert("Changes saved.");
-            btn.innerText = "Save Changes";
+            btn.disabled = true;
+            btn.innerText = "Saving Changes...";
+            
+            try {
+                await updateDoc(doc(db, "venues", venueId), {
+                    vipOfferText: document.getElementById('edit-offer').value,
+                    voucherCode: document.getElementById('edit-code').value,
+                    voucherDetails: document.getElementById('edit-details').value,
+                    voucherTerms: document.getElementById('edit-terms').value,
+                    dailyVoucherLimit: parseInt(document.getElementById('edit-limit').value) || 50
+                });
+                
+                // Show clean visual inline success indicator instead of breaking the iframe alert rules
+                btn.classList.remove('bg-sky-600', 'hover:bg-sky-700');
+                btn.classList.add('bg-emerald-600');
+                btn.innerText = "✓ Changes Saved Successfully!";
+                
+                setTimeout(() => {
+                    btn.classList.add('bg-sky-600', 'hover:bg-sky-700');
+                    btn.classList.remove('bg-emerald-600');
+                    btn.innerText = "Save Changes";
+                    btn.disabled = false;
+                }, 2500);
+
+            } catch (err) {
+                console.error("Database update failed: ", err);
+                btn.classList.remove('bg-sky-600', 'hover:bg-sky-700');
+                btn.classList.add('bg-rose-600');
+                btn.innerText = "✕ Error Saving Changes";
+                
+                setTimeout(() => {
+                    btn.classList.add('bg-sky-600', 'hover:bg-sky-700');
+                    btn.classList.remove('bg-rose-600');
+                    btn.innerText = "Save Changes";
+                    btn.disabled = false;
+                }, 3000);
+            }
+        };
+
+        window.updateBranding = async () => {
+            const btn = document.getElementById('save-branding-btn');
+            btn.disabled = true;
+            btn.innerText = "Saving Cover Image...";
+            
+            try {
+                await updateDoc(doc(db, "venues", venueId), {
+                    coverImageUrl: document.getElementById('edit-cover').value
+                });
+                
+                btn.classList.remove('bg-sky-600', 'hover:bg-sky-700');
+                btn.classList.add('bg-emerald-600');
+                btn.innerText = "✓ Cover Image Saved!";
+                
+                setTimeout(() => {
+                    btn.classList.add('bg-sky-600', 'hover:bg-sky-700');
+                    btn.classList.remove('bg-emerald-600');
+                    btn.innerText = "Save Cover Image";
+                    btn.disabled = false;
+                }, 2500);
+
+            } catch (err) {
+                console.error("Branding database update failed: ", err);
+                btn.classList.remove('bg-sky-600', 'hover:bg-sky-700');
+                btn.classList.add('bg-rose-600');
+                btn.innerText = "✕ Error Saving Image";
+                
+                setTimeout(() => {
+                    btn.classList.add('bg-sky-600', 'hover:bg-sky-700');
+                    btn.classList.remove('bg-rose-600');
+                    btn.innerText = "Save Cover Image";
+                    btn.disabled = false;
+                }, 3000);
+            }
         };
 
         init();
